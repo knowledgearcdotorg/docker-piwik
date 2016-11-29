@@ -6,7 +6,7 @@ RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selectio
 RUN apt-get update
 
 RUN apt-get upgrade -y && \
-    apt-get install -y curl php-curl php-gd php-geoip && \
+    apt-get install -y curl php-curl php-gd php-geoip php-mysql php-mbstring php-xml && \
     apt-get -y autoremove && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -26,6 +26,4 @@ RUN curl -fsSL -o /var/www/piwik/misc/GeoIPCity.dat.gz "http://geolite.maxmind.c
 RUN echo 'geoip.custom_directory=/var/www/piwik/misc' \
 >> /etc/php/7.0/mods-available/geoip.ini
 
-RUN chown www-data /var/www/piwik
-
-VOLUME /var/www/piwik
+RUN chown -R www-data: /var/www/piwik
