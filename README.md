@@ -71,15 +71,41 @@ Apache2 should now be run, and will reference the same volume:
  docker run -v www-data:/var/www/ -p 80:80 --name apache2 knowledgearcdotorg/apache2
 ```
 
-You will now need to add an VirtualHost definition to Apache2 and enable it. The VirtualHost definition for Piwik is available from https://raw.githubusercontent.com/knowledgearcdotorg/docker-piwik/master/etc/apache2/sites-available/piwik.conf:
+You will now need to add an VirtualHost definition to Apache2 and enable it. A possible VirtualHost might look like:
 
 ```
-sed -i -e 's/{domain}/piwik.domain.tld/g' -e 's/{container}/piwik/g' piwik.conf
+<VirtualHost *:80>
+    ServerName {name}.archive.knowledgearc.net
+    DocumentRoot /var/www/piwik
+
+    ServerAdmin {email}
+
+    <Proxy *>
+        Require all granted
+    </Proxy>
+
+    ProxyRequests Off
+    ProxyPreserveHost On
+    ProxyPassMatch ^/(.*\.php(/.*)?)$ fcgi://piwik:9000/var/www/piwik/$1
+
+    ErrorLog ${APACHE_LOG_DIR}/piwik.error.log
+    LogLevel warn
+    CustomLog ${APACHE_LOG_DIR}/piwik.access.log combined
+</VirtualHost>
+```
+
+where:
+- {domain} is the domain you want to host your piwik on,
+- {email} is the admin email.
+
+If your Piwik container has a different name, you will also need to change "fcgi://piwik:9000/var/www/piwik/$1" to point to your container name.
+
+Save this to a file called piwik.conf then upload to the Apache2 container:
+
+```
 docker cp piwik.conf apache2:/etc/apache2/sites-available/
 docker exec apache2 a2ensite piwik
 ```
-
-Note the two placeholders; {domain} and {container}. You will need to use sed to substitute these placeholders with the actual domain and container name.
 
 Finally, restart the Apache2 Docker container to load the new changes:
 
